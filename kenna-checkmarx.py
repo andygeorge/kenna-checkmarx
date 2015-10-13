@@ -3,9 +3,11 @@
 import sys, requests, json
 from bs4 import BeautifulSoup
 
+token = sys.argv[1]
+file = sys.argv[2]
+
 api_endpoint_assets = "https://api.kennasecurity.com/assets"
 api_endpoint_vulns = "https://api.kennasecurity.com/vulnerabilities"
-token = "123abc"
 headers = {'content-type': 'application/json', 'X-Risk-Token': token}
 
 cwe_wasc_dict = {
@@ -17,7 +19,7 @@ cwe_wasc_dict = {
     "209": "13"
 }
 
-file = sys.argv[1]
+
 handler = open(file).read()
 soup = BeautifulSoup(handler)
 

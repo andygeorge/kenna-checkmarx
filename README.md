@@ -5,7 +5,7 @@ This script will inject Checkmarx asset/vuln information into the Kenna platform
 Usage:
 
 ```
-kenna-checkmarx.py [checkmarx XML file]
+kenna-checkmarx.py <Kenna API token> <checkmarx XML filename>
 ```
 
 Tested on Python 2.7.6 with BeautifulSoup4
