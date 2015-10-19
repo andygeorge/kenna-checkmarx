@@ -11,7 +11,8 @@ API_ENDPOINT_ASSETS = "https://api.kennasecurity.com/assets"
 API_ENDPOINT_VULNS = "https://api.kennasecurity.com/vulnerabilities"
 headers = {'content-type': 'application/json', 'X-Risk-Token': token}
 
-cwe_wasc_dict = {
+asset_urls_dict = {}
+CWE_WAS_DICT = {
     "77": "19",
     "552": "16",
     "248": "13",
@@ -90,11 +91,13 @@ soup = BeautifulSoup(handler)
 #   }
 # }
 
-# each vuln
+
+## Iterate through Checkmarx XML and pull out vuln info, then create new vulns/assets via API_ENDPOINT_VULNS
+##
 for query in soup.find_all('query'):
     # get cwe/wasc
     the_cwe_id = query['cweid']
-    the_wasc_id = cwe_wasc_dict[the_cwe_id]
+    the_wasc_id = CWE_WAS_DICT[the_cwe_id]
     
     # iterate through result nodes
     for result in query.find_all('result'):
@@ -106,13 +109,15 @@ for query in soup.find_all('query'):
             for pathnode in path.find_all('pathnode'):
                 the_line = pathnode.line.string
                 the_column = pathnode.column.string
+                the_snippet = pathnode.snippet.line.code.string
+
                 the_locator = the_filename + LOCATOR_DELIMITER + the_line + LOCATOR_DELIMITER + the_column
                 vuln_json = {
                     "vulnerability": {
                         "wasc_id" : "WASC-" + the_wasc_id,
                         "primary_locator" : "file",
                         "file" : the_locator,
-                        "url_locator" : the_url
+                        "notes" : "Detected in " + the_filename + ", line " + the_line + ", column " + the_column + ": " + the_snippet
                     }
                 }
 
@@ -120,18 +125,3 @@ for query in soup.find_all('query'):
                 vuln_post = requests.post(API_ENDPOINT_VULNS, data=json.dumps(vuln_json), headers=headers)
                 response = vuln_post.json()
                 the_asset_id = str(response['vulnerability']['asset_id'])
-                print(vuln_post)
-
-                # doesn't work until new asset is synced/indexed :(
-                # POST and set url for asset
-                the_asset_api_endpoint = API_ENDPOINT_ASSETS + "/" + the_asset_id
-                #print(the_asset_api_endpoint)
-                asset_json = {
-                    "asset" : {
-                        "url" : the_url
-                    }
-                }
-                #asset_post = requests.post(the_asset_api_endpoint, data=json.dumps(asset_json), headers=headers)
-                #response = asset_post.json()
-                #print(asset_post)
-                #print("asset post results: " + response)
